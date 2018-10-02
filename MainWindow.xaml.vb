@@ -145,7 +145,14 @@ Public Class MainWindow
             Shares = New ManagementClass(Scope, Path, Options)
             Dim MOC As ManagementObjectCollection = Shares.GetInstances()
             For Each mo As ManagementObject In MOC
-                Console.WriteLine("{0} - {1} - {2}", mo("Name"), mo("Description"), mo("Path"))
+                '  Console.WriteLine("{0} - {1} - {2}", mo("Name"), mo("Description"), mo("Path"))
+                Dim shareName = mo("name")
+                Dim startingShare1 = "CMA"
+                Dim startingShare2 = "CMI"
+                Dim startingShare3 = "CMD"
+                If InStr(1, shareName, startingShare1) = 1 Or InStr(1, shareName, startingShare2) = 1 Or InStr(1, shareName, startingShare3) = 1 Then
+                    Console.WriteLine(shareName)
+                End If
             Next
 
         Catch ex As Exception
