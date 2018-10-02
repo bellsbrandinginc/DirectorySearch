@@ -1,0 +1,132 @@
+﻿<Controls:MetroWindow
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro" x:Name="MainWindow"
+    x:Class="MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:MainWindow"
+   
+    xmlns:col="clr-namespace:System.Collections;assembly=mscorlib"
+    mc:Ignorable="d"
+    BorderBrush="{DynamicResource AccentColorBrush}"
+    BorderThickness="1"
+    Title="Client Inventory" Height="450.501" Width="646.199" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize" Foreground="Black" Background="white" >
+
+
+
+
+
+    <Grid x:Name="windowgrip" Margin="0,0,0,5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="52*"/>
+            <ColumnDefinition Width="31*"/>
+            <ColumnDefinition Width="52*"/>
+            <ColumnDefinition Width="205*"/>
+            <ColumnDefinition Width="2"/>
+            <ColumnDefinition Width="51"/>
+            <ColumnDefinition Width="41*"/>
+            <ColumnDefinition Width="200*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid x:Name="FirstGrid">
+            <Label x:Name="Server_label" Content="Server List:" HorizontalAlignment="Left" Margin="37,19,-142,0" VerticalAlignment="Top" Width="109"/>
+            <Button x:Name="viewCustomized" Content="Click to customize" HorizontalAlignment="Left" Margin="96,18,-217,0" VerticalAlignment="Top" Width="125" FontSize="10" BorderBrush="transparent" Background="transparent" Foreground="Darkgray" Height="29" Visibility="visible" RenderTransformOrigin="0.507,-0.069"/>
+            <ProgressBar x:Name="progressbar1" Height="Auto" Margin="274,385,-463,26" Visibility="hidden"/>
+
+            <ListView Height="362" Visibility="Hidden" Foreground="black"
+              HorizontalAlignment="Left" 
+              Name="listView1" 
+              VerticalAlignment="Top" 
+              Width="539"
+              SelectionChanged="listView1_SelectionChanged" Margin="37,44,-572,0" SelectionMode="Multiple" Grid.RowSpan="2" >
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn>
+                            <GridViewColumn.Header>
+                                <CheckBox  x:Name="selectAllCheckbox" Checked="chkSelectAll_Checked" Unchecked="chkUnselectAll_Unchecked"  Visibility="Hidden"  IsThreeState="False"></CheckBox>
+                            </GridViewColumn.Header>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox  Margin="5, 0"  IsChecked="{Binding IsChecked}" Checked="checkbox_IsChecked"  Unchecked="checkbox_IsUnchecked"  IsThreeState="False"  ></CheckBox>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Server Location">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="5, 0" Text ="{Binding serverid}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Server Name">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="5, 0" Text="{Binding serverName}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+
+
+
+            <Button x:Name="closeCustomized" Content="✔" HorizontalAlignment="Left" Margin="540,13,-591,0" VerticalAlignment="Top" Width="55" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Height="26" Visibility="Hidden" RenderTransformOrigin="0.655,0.577"/>
+        </Grid>
+
+
+        <Grid Grid.ColumnSpan="9" x:Name="SecondGrid" Visibility="Visible">
+
+            <Button x:Name="BT_Go" Content="Search Inventory" HorizontalAlignment="Left" Margin="86,369,0,0" VerticalAlignment="Top" Width="143" RenderTransformOrigin="-0.301,-0.135" Height="40" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Grid.Column="4" FontSize="14" Grid.ColumnSpan="3" />
+            <Label x:Name="label_status" Content="" Grid.Column="7" HorizontalAlignment="Left" Margin="39,741,0,-347" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+            <Label x:Name="label1" Content="Output File (.csv) :" HorizontalAlignment="Left" Margin="37,86,0,0" VerticalAlignment="Top" Grid.ColumnSpan="4" Width="116" Grid.Column="1"/>
+            <TextBox x:Name="TB_Output" Grid.Column="1" HorizontalAlignment="Left" Margin="37,117,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="521" RenderTransformOrigin="0.504,0.464" Grid.ColumnSpan="8" Height="29" MaxLines="1" />
+            <Button x:Name="BT_Output" Content="..." HorizontalAlignment="Left" Margin="576,126,0,0" VerticalAlignment="Top" Width="52" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Height="29"/>
+
+
+            <Grid Name="gvMain"  Grid.ColumnSpan="8" Margin="37,190,35,46" HorizontalAlignment="Center"  Width="562" Grid.Column="1">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="25"></RowDefinition>
+                    <RowDefinition Height="50"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <Label x:Name="label2" Content="Input Inclusion List :" HorizontalAlignment="Left" Margin="0,-32,0,0" VerticalAlignment="Top" Width="122" Height="40"/>
+
+                <Border Grid.ColumnSpan="2" Margin="0,9,0,-92" BorderThickness="1" BorderBrush="#FFABADB3" Grid.RowSpan="2" HorizontalAlignment="Left" Width="562">
+
+
+                    <ScrollViewer Margin="0,1,1,1" CanContentScroll="False"
+              HorizontalScrollBarVisibility="Hidden" Grid.ColumnSpan="2"  Drop="ImagePanel_Drop" AllowDrop="true" Background="Transparent" Grid.RowSpan="2" >
+                        <Grid Name="gridInputText" Grid.ColumnSpan="3" Grid.Row="1" Height="168" Width="552">
+                            <TextBox x:Name="inputText"
+                                AcceptsTab="True"
+                                SpellCheck.IsEnabled="True"
+                                TextWrapping="Wrap"
+                                AcceptsReturn="True"
+                                VerticalAlignment="Stretch"
+                                VerticalContentAlignment="Top"
+                                HorizontalScrollBarVisibility="Hidden"
+                                VerticalScrollBarVisibility="Auto" Margin="10,0,19,10" />
+                        </Grid>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <RadioButton x:Name="rb_seperate" Content="Search by Client Number" Margin="172,165,264,0" VerticalAlignment="Top"/>
+            <RadioButton x:Name="rb_group" Content="Search by Matter Number" Grid.Column="7" HorizontalAlignment="Right" Margin="0,165,72,0" VerticalAlignment="Top" Width="169" Grid.ColumnSpan="2"/>
+            <TextBox x:Name="TB_ServerList" Grid.Column="1" HorizontalAlignment="Left" Margin="37,49,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="521" RenderTransformOrigin="0.504,0.464" Grid.ColumnSpan="8" Height="29" MaxLines="1" />
+            <Button x:Name="BT_Input" Content="..." HorizontalAlignment="Left" Margin="576,58,0,0" VerticalAlignment="Top" Width="52" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Height="29"/>
+        </Grid>
+
+
+        <Grid x:Name="ThirdGrid" Visibility="hidden">
+            <ListBox x:Name="resultsBox" HorizontalAlignment="Left" Margin="23,14,-615,0" VerticalAlignment="Top" Width="596" Height="349" ScrollViewer.HorizontalScrollBarVisibility="Auto"  />
+            <Button x:Name="closeResults" Content="✔" HorizontalAlignment="Left" Margin="564,379,-615,0" VerticalAlignment="Top" Width="55" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Height="26"/>
+
+        </Grid>
+    </Grid>
+</Controls:MetroWindow>
