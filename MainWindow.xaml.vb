@@ -24,94 +24,76 @@ Public Class MainWindow
 
     Private FullPathsToPrograms As List(Of String) = New List(Of String)
 
-
-
-
     Private Sub Window_Closed(ByVal sender As System.Object, ByVal e As System.EventArgs)
         Application.Current.Shutdown()
     End Sub
 
     Private Sub Window_Loaded(ByVal sender As System.Object, ByVal e As System.EventArgs)
         serverlist.Clear()
-        ListShares()
         ReadInputFile()
+        ListShares()
         TB_ServerList.Text = "\\gsodata2\PSS Data\~Programs\~PSC Scripts\Server Storage Stats\input files\target servers.txt"
         rb_seperate.IsChecked = True
     End Sub
 
-    Public Property PreventAccessKey As Boolean = True
 
     Private Sub BT_Go_Click(sender As Object, e As RoutedEventArgs) Handles BT_Go.Click
 
         Dim search1 As String = inputText.Text
+        'Dim dirs As String = IO.Path.GetFullPath(IO.Path.Combine(path1, path2))
         Dim dirs As List(Of String) = New List(Of String)
-        Dim resultingPath As List(Of String) = dirs.Distinct().ToList()
-
         Dim searchPattern As String = "*" & inputText.Text & "*"
         Dim searchResults() As String = Split(searchPattern, vbCrLf)
 
+        If (rb_seperate.IsChecked) Then
+            If (search1.Contains("-") Or search1.Contains("_")) Then
+                MsgBox("Search by matter instead")
+            Else
 
-        For Each search In searchResults
-            For Each foo In serverlist
-                Dim servers As String = "\\" + foo.serverName.ToString
-                Dim tempServer = "\\" + "lvddata2"
-                For i As Integer = 0 To _shareName.Count - 1
-                    Dim path = IO.Path.Combine(tempServer, _shareName(i))
-                    dirs.Add(path)
+            End If
+            ' For Each search In searchResults
+            For i As Integer = 0 To searchResults.Count - 1
+                For Each foo In serverlist
+                    Dim servers As String = "\\" + foo.serverName.ToString
+                    Dim tempServer = "\\" + "lvddata2"
+                    For x As Integer = 0 To _shareName.Count - 1
+                        Dim path = IO.Path.Combine(tempServer, _shareName(x))
+                        dirs.Add(path)
+                    Next
+                Next
+                Dim resultingPath As List(Of String) = dirs.Distinct().ToList()
+                For Each result In resultingPath
+                    CollectFiles(result, searchResults(i))
                 Next
             Next
-            For Each result In resultingPath
-                CollectFiles(result, search)
+            showResults()
+        Else
+            For Each search In searchResults
+                For Each foo In serverlist
+                    Dim servers As String = "\\" + foo.serverName.ToString
+                    Dim tempServer = "\\" + "lvddata2"
+                    For i As Integer = 0 To _shareName.Count - 1
+                        Dim path = IO.Path.Combine(tempServer, _shareName(i))
+                        dirs.Add(path)
+                    Next
+                Next
+                Dim resultingPath As List(Of String) = dirs.Distinct().ToList()
+                Dim splitMatters() As String = Split(search, "_")
+                Dim firstMatter = splitMatters(0)
+                Dim secondMatter = splitMatters(1)
+
+                For Each result In resultingPath
+                    Dim matterCollection As List(Of String) = CollectFiles(result, firstMatter)
+                    For Each col In matterCollection
+                        CollectMatter(col, secondMatter)
+                    Next
+                Next
             Next
-        Next
-        showResults()
-
-
-        'If (rb_seperate.IsChecked) Then
-
-        '    If (search1.Contains("-") Or search1.Contains("_")) Then
-        '        MsgBox("Search by matter instead")
-        '    Else
-        '        Dim searchPattern As String = "*" & inputText.Text & "*"
-
-
-        '        Dim searchResults() As String = Split(searchPattern, vbCrLf)
-        '        For Each search In searchResults
-        '            '    MsgBox(search)
-        '            Dim lines() As String = Split(search, vbCrLf)
-        '            For Each li In lines
-        '                For Each d In dirs
-        '                    CollectFiles(d, li)
-        '                Next
-        '            Next
-        '        Next
-        '        showResults()
-        '    End If
-        'Else
-
-        '    Dim searchPattern As String = "*" & inputText.Text & "*"
-        '    Dim lines() As String = Split(searchPattern, vbCrLf)
-
-        '    For Each li In lines
-        '        Dim splitMatters() As String = Split(li, "_")
-        '        Dim firstMatter = splitMatters(0)
-        '        Dim secondMatter = splitMatters(1)
-
-        '        For Each d In dirs
-        '            Dim matterCollection As List(Of String) = CollectFiles(d, firstMatter)
-
-        '            For Each col In matterCollection
-        '                CollectMatter(col, secondMatter)
-        '            Next
-        '        Next
-        '    Next
-        '    showResults()
-        'End If
+            showResults()
+        End If
     End Sub
 
-
     Public Function ReadInputFile() As Integer
-
         Dim linecount As Integer = 0
         Using sr As New StreamReader(inputFile)
 
@@ -141,7 +123,16 @@ Public Class MainWindow
         CO.Username = "cmsvc"
         CO.Password = "cm2016lw!"
         Path.Server = "LVDDATA2" ' use . for local server, else server name
+        'For Each foo In serverlist
+        '    ' Path.Server = foo.serverName
+        '    Dim newServer = foo.serverName
+        '    Path.Server = newServer
 
+        '    Dim myServers As List(Of String) = New List(Of String)
+        '    myServers.Add(newServer)
+        '    Dim resultingPath As List(Of String) = myServers.Distinct().ToList()
+
+        '    For Each newpath In resultingPath
         Path.NamespacePath = "\root\cimv2"
         Path.RelativePath = "Win32_Share"
 
@@ -267,7 +258,6 @@ Public Class MainWindow
     Private Sub BT_Input_Click(sender As Object, e As RoutedEventArgs) Handles BT_Input.Click
         Dim dlg As New Microsoft.Win32.OpenFileDialog
 
-
         dlg.DefaultExt = ".txt" ' Default file extension
         dlg.Filter = "Server target list (.txt)|*.txt" ' Filter files by extension
 
@@ -322,20 +312,17 @@ Public Class MainWindow
         Dim checkBox = TryCast(sender, CheckBox)
         If checkBox Is Nothing Then Return
 
-
         For Each item In serverlist
             item.IsChecked = checkBox.IsChecked.Value = False
         Next
     End Sub
 
     Public Sub checkbox_IsChecked()
-
         If listView1.Items.Count > 0 Then
 
             For i As Integer = 0 To listView1.Items.Count - 1
                 TryCast(listView1.Items(i), DataServerList).IsChecked = True
             Next
-
             listView1.UpdateLayout()
         End If
     End Sub
@@ -346,7 +333,6 @@ Public Class MainWindow
             For i As Integer = 0 To listView1.Items.Count - 1
                 TryCast(listView1.Items(i), DataServerList).IsChecked = False
             Next
-
             listView1.UpdateLayout()
         End If
 
