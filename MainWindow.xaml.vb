@@ -19,6 +19,13 @@ Public Class MainWindow
     Dim WithEvents BackgroundWorker1 As BackgroundWorker
     Dim lstMyObject As List(Of Object) = New List(Of Object)()
     Dim _globallinecount As Integer
+    Dim _shareName As List(Of String) = New List(Of String)
+
+
+    Private FullPathsToPrograms As List(Of String) = New List(Of String)
+
+
+
 
     Private Sub Window_Closed(ByVal sender As System.Object, ByVal e As System.EventArgs)
         Application.Current.Shutdown()
@@ -32,47 +39,74 @@ Public Class MainWindow
         rb_seperate.IsChecked = True
     End Sub
 
+    Public Property PreventAccessKey As Boolean = True
 
     Private Sub BT_Go_Click(sender As Object, e As RoutedEventArgs) Handles BT_Go.Click
 
-        Dim search1 As String
-        search1 = inputText.Text
-        Dim path As String = ""
-        'Dim dirs As String = IO.Path.GetFullPath(IO.Path.Combine(path1, path2))
+        Dim search1 As String = inputText.Text
         Dim dirs As List(Of String) = New List(Of String)
+        Dim resultingPath As List(Of String) = dirs.Distinct().ToList()
 
-        If (rb_seperate.IsChecked) Then
+        Dim searchPattern As String = "*" & inputText.Text & "*"
+        Dim searchResults() As String = Split(searchPattern, vbCrLf)
 
-            If (search1.Contains("-") Or search1.Contains("_")) Then
-                MsgBox("Search by matter instead")
-            Else
-                Dim searchPattern As String = "*" & inputText.Text & "*"
-                Dim lines() As String = Split(searchPattern, vbCrLf)
 
-                For Each li In lines
-                    For Each d In dirs
-                        CollectFiles(d, li)
-                    Next
-                Next
-
-                FirstGrid.Visibility = Visibility.Hidden
-                SecondGrid.Visibility = Visibility.Hidden
-                ThirdGrid.Visibility = Visibility.Visible
-            End If
-        Else
-
-            Dim searchPattern As String = "*" & inputText.Text & "*"
-            Dim lines() As String = Split(searchPattern, vbCrLf)
-
-            For Each li In lines
-                For Each d In dirs
-                    CollectFiles(d, li)
+        For Each search In searchResults
+            For Each foo In serverlist
+                Dim servers As String = "\\" + foo.serverName.ToString
+                Dim tempServer = "\\" + "lvddata2"
+                For i As Integer = 0 To _shareName.Count - 1
+                    Dim path = IO.Path.Combine(tempServer, _shareName(i))
+                    dirs.Add(path)
                 Next
             Next
-            FirstGrid.Visibility = Visibility.Hidden
-            SecondGrid.Visibility = Visibility.Hidden
-            ThirdGrid.Visibility = Visibility.Visible
-        End If
+            For Each result In resultingPath
+                CollectFiles(result, search)
+            Next
+        Next
+        showResults()
+
+
+        'If (rb_seperate.IsChecked) Then
+
+        '    If (search1.Contains("-") Or search1.Contains("_")) Then
+        '        MsgBox("Search by matter instead")
+        '    Else
+        '        Dim searchPattern As String = "*" & inputText.Text & "*"
+
+
+        '        Dim searchResults() As String = Split(searchPattern, vbCrLf)
+        '        For Each search In searchResults
+        '            '    MsgBox(search)
+        '            Dim lines() As String = Split(search, vbCrLf)
+        '            For Each li In lines
+        '                For Each d In dirs
+        '                    CollectFiles(d, li)
+        '                Next
+        '            Next
+        '        Next
+        '        showResults()
+        '    End If
+        'Else
+
+        '    Dim searchPattern As String = "*" & inputText.Text & "*"
+        '    Dim lines() As String = Split(searchPattern, vbCrLf)
+
+        '    For Each li In lines
+        '        Dim splitMatters() As String = Split(li, "_")
+        '        Dim firstMatter = splitMatters(0)
+        '        Dim secondMatter = splitMatters(1)
+
+        '        For Each d In dirs
+        '            Dim matterCollection As List(Of String) = CollectFiles(d, firstMatter)
+
+        '            For Each col In matterCollection
+        '                CollectMatter(col, secondMatter)
+        '            Next
+        '        Next
+        '    Next
+        '    showResults()
+        'End If
     End Sub
 
 
@@ -152,6 +186,10 @@ Public Class MainWindow
                 Dim startingShare3 = "CMD"
                 If InStr(1, shareName, startingShare1) = 1 Or InStr(1, shareName, startingShare2) = 1 Or InStr(1, shareName, startingShare3) = 1 Then
                     Console.WriteLine(shareName)
+                    _shareName.Add(shareName)
+                    'For Each share In _shareName
+                    '    MsgBox(share)
+                    'Next
                 End If
             Next
 
@@ -164,6 +202,35 @@ Public Class MainWindow
             End If
         End Try
     End Sub
+
+
+    Public Function CollectMatter(ByVal dir As String, ByVal pattern As String)
+        Dim output = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output_matter.txt"
+        Dim directory As DirectoryInfo = New DirectoryInfo(dir)
+        Dim dire = Directory.GetDirectories(pattern)
+        Dim sb As New StringBuilder()
+        Dim queue As ConcurrentQueue(Of String) = New ConcurrentQueue(Of String)
+        For Each result In dire.[Select](Function(file) file.FullName)
+            queue.Enqueue(result)
+            Dim underscore = result.Replace("__", "_")
+            resultsBox.Items.Add(underscore)
+
+            FullPathsToPrograms.Add(result)
+            For Each item As Object In resultsBox.Items
+                item.Replace("__", "_")
+                sb.AppendFormat("{0} {1}", item, Environment.NewLine)
+            Next
+
+            Dim writer As New System.IO.StreamWriter(output, False)
+            writer.Write(sb.ToString())
+            writer.WriteLine()
+            writer.Close()
+        Next
+
+        Return queue.AsEnumerable().ToList()
+    End Function
+
+
 
     Public Function CollectFiles(ByVal directory As String, ByVal pattern As String) As List(Of String)
         Dim queue As ConcurrentQueue(Of String) = New ConcurrentQueue(Of String)()
@@ -179,16 +246,21 @@ Public Class MainWindow
 
         For Each result In dire.[Select](Function(file) file.FullName)
             queue.Enqueue(result)
-            resultsBox.Items.Add(result)
+            Dim underscore = result.Replace("_", "__")
+            resultsBox.Items.Add(underscore)
+
+            FullPathsToPrograms.Add(result)
+
             For Each item As Object In resultsBox.Items
+                item.Replace("__", "_")
                 sb.AppendFormat("{0} {1}", item, Environment.NewLine)
             Next
-            Dim writer As New System.IO.StreamWriter(output)
+
+            Dim writer As New System.IO.StreamWriter(output, False)
             writer.Write(sb.ToString())
             writer.WriteLine()
             writer.Close()
         Next
-        MsgBox("Written to file")
     End Sub
 
 
@@ -280,6 +352,14 @@ Public Class MainWindow
 
     End Sub
 
+
+    Private Sub showResults()
+        FirstGrid.Visibility = Visibility.Hidden
+        SecondGrid.Visibility = Visibility.Hidden
+        ThirdGrid.Visibility = Visibility.Visible
+    End Sub
+
+
     Private Sub viewCustomized_Click(sender As Object, e As RoutedEventArgs) Handles viewCustomized.Click
         SecondGrid.Visibility = Visibility.Hidden
         viewCustomized.Visibility = Visibility.Hidden
@@ -301,7 +381,10 @@ Public Class MainWindow
     End Sub
 
     Private Sub closeResults_Click(sender As Object, e As RoutedEventArgs) Handles closeResults.Click
-
+        If (resultsBox.Items IsNot Nothing) Then
+            '  MsgBox("Results Successfully written to file.")
+        End If
+        resultsBox.Items.Clear()
         FirstGrid.Visibility = Visibility.Visible
         SecondGrid.Visibility = Visibility.Visible
 
@@ -309,12 +392,21 @@ Public Class MainWindow
     End Sub
 
     Private Sub resultsBox_MouseDoubleClick(ByVal sender As Object, ByVal e As MouseEventArgs) Handles resultsBox.MouseDoubleClick
-        Process.Start(resultsBox.SelectedItem)
+
+        Dim fullpath As String = FullPathsToPrograms(resultsBox.SelectedIndex)
+
+        Dim MyInstance As New System.Diagnostics.Process
+        Dim info As ProcessStartInfo = New ProcessStartInfo((fullpath))
+        MyInstance.StartInfo = info
+        MyInstance.Start()
     End Sub
 
     Private Sub listView1_SelectionChanged(ByVal sender As Object, ByVal e As SelectionChangedEventArgs)
+        ' selectedList = serverlist(listView1.SelectedIndex)
+
+
         '   selectedList = serverlist(listView1.SelectedIndex)
-        '  MessageBox.Show("Selected server location = " & selectedList.serverid & vbCrLf & "Selected Server name = " & selectedList.serverName)
+        ' MessageBox.Show("Selected server location = " & selectedList.serverid & vbCrLf & "Selected Server name = " & selectedList.serverName)
 
         '  GetSubDir(sender, selectedList.serverid)
     End Sub
