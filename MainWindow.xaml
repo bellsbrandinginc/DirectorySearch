@@ -1,4 +1,4 @@
-﻿<Controls:MetroWindow
+<Controls:MetroWindow
     xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro" x:Name="MainWindow"
     x:Class="MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -13,8 +13,7 @@
     BorderThickness="1"
     Title="Client Inventory" Height="450.501" Width="646.199" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize" Foreground="Black" Background="white" >
 
-
-
+ 
 
 
     <Grid x:Name="windowgrip" Margin="0,0,0,5">
@@ -37,19 +36,19 @@
 
             <ListView Height="362" Visibility="Hidden" Foreground="black"
               HorizontalAlignment="Left" 
-              Name="listView1" 
+              x:Name="listView1" 
               VerticalAlignment="Top" 
-              Width="539"
-              SelectionChanged="listView1_SelectionChanged" Margin="37,44,-572,0" SelectionMode="Multiple" Grid.RowSpan="2" >
+              Width="539" Margin="37,44,-572,0" SelectionMode="Multiple" Grid.RowSpan="2" >
                 <ListView.View>
                     <GridView>
                         <GridViewColumn>
                             <GridViewColumn.Header>
-                                <CheckBox  x:Name="selectAllCheckbox" Checked="chkSelectAll_Checked" Unchecked="chkUnselectAll_Unchecked"  Visibility="Hidden"  IsThreeState="False"></CheckBox>
+                                <CheckBox  x:Name="selectAllCheckbox" IsChecked="{Binding RelativeSource={RelativeSource FindAncestor,
+                                         AncestorType={x:Type ListViewItem}}, Path=IsSelected}"   Visibility="Hidden"></CheckBox>
                             </GridViewColumn.Header>
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <CheckBox  Margin="5, 0"  IsChecked="{Binding IsChecked}" Checked="checkbox_IsChecked"  Unchecked="checkbox_IsUnchecked"  IsThreeState="False"  ></CheckBox>
+                                    <CheckBox  Margin="5, 0"  IsChecked="{Binding IsChecked,ElementName=selectAllCheckbox}" Unchecked="checkbox_IsUnChecked" ></CheckBox>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -63,7 +62,7 @@
                         <GridViewColumn Header="Server Name">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Margin="5, 0" Text="{Binding serverName}"/>
+                                    <TextBlock x:Name="serverName" Margin="5, 0" Text="{Binding serverName}"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -124,7 +123,8 @@
 
 
         <Grid x:Name="ThirdGrid" Visibility="hidden">
-            <ListBox x:Name="resultsBox" HorizontalAlignment="Left" Margin="23,14,-615,0" VerticalAlignment="Top" Width="596" Height="349" ScrollViewer.HorizontalScrollBarVisibility="Auto"  />
+            <ListView x:Name="resultsBox" HorizontalAlignment="Left" Margin="23,14,-615,0" VerticalAlignment="Top" Width="596" Height="349" ScrollViewer.HorizontalScrollBarVisibility="Auto"  >
+            </ListView>
             <Button x:Name="closeResults" Content="✔" HorizontalAlignment="Left" Margin="564,379,-615,0" VerticalAlignment="Top" Width="55" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Height="26"/>
 
         </Grid>
