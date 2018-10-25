@@ -20,6 +20,7 @@ Public Class MainWindow
     Dim lstMyObject As List(Of Object) = New List(Of Object)()
     Dim _globallinecount As Integer
     Dim _shareName As List(Of String) = New List(Of String)
+    Dim _dirs As List(Of String) = New List(Of String)
 
 
     Private FullPathsToPrograms As List(Of String) = New List(Of String)
@@ -40,58 +41,75 @@ Public Class MainWindow
     Private Sub BT_Go_Click(sender As Object, e As RoutedEventArgs) Handles BT_Go.Click
 
         Dim search1 As String = inputText.Text
-        'Dim dirs As String = IO.Path.GetFullPath(IO.Path.Combine(path1, path2))
-        Dim dirs As List(Of String) = New List(Of String)
-        Dim searchPattern As String = "*" & inputText.Text & "*"
-        Dim searchResults() As String = Split(searchPattern, vbCrLf)
 
         If (rb_seperate.IsChecked) Then
             If (search1.Contains("-") Or search1.Contains("_")) Then
                 MsgBox("Search by matter instead")
             Else
-
+                ScanServers()
+                ClientSearch()
+                showResults()
             End If
-            ' For Each search In searchResults
-            For i As Integer = 0 To searchResults.Count - 1
-                For Each foo In serverlist
-                    Dim servers As String = "\\" + foo.serverName.ToString
-                    Dim tempServer = "\\" + "lvddata2"
-                    For x As Integer = 0 To _shareName.Count - 1
-                        Dim path = IO.Path.Combine(tempServer, _shareName(x))
-                        dirs.Add(path)
-                    Next
-                Next
-                Dim resultingPath As List(Of String) = dirs.Distinct().ToList()
-                For Each result In resultingPath
-                    CollectFiles(result, searchResults(i))
-                Next
-            Next
-            showResults()
         Else
-            For Each search In searchResults
-                For Each foo In serverlist
-                    Dim servers As String = "\\" + foo.serverName.ToString
-                    Dim tempServer = "\\" + "lvddata2"
-                    For i As Integer = 0 To _shareName.Count - 1
-                        Dim path = IO.Path.Combine(tempServer, _shareName(i))
-                        dirs.Add(path)
-                    Next
-                Next
-                Dim resultingPath As List(Of String) = dirs.Distinct().ToList()
-                Dim splitMatters() As String = Split(search, "_")
-                Dim firstMatter = splitMatters(0)
-                Dim secondMatter = splitMatters(1)
-
-                For Each result In resultingPath
-                    Dim matterCollection As List(Of String) = CollectFiles(result, firstMatter)
-                    For Each col In matterCollection
-                        CollectMatter(col, secondMatter)
-                    Next
-                Next
-            Next
+            ScanServers()
+            MatterSearch()
             showResults()
         End If
     End Sub
+
+
+    Public Function ScanServers()
+        For Each server In serverlist
+            Dim servers As String = "\\" + server.serverName.ToString
+            Dim tempServer = "\\" + "lvddata2"
+            For x As Integer = 0 To _shareName.Count - 1
+                Dim path = IO.Path.Combine(tempServer, _shareName(x))
+                _dirs.Add(path)
+            Next
+        Next
+        Return 1
+    End Function
+
+
+    Public Function ClientSearch()
+        Dim searchPattern As String = "*" & inputText.Text & "*"
+        Dim searchResults() As String = Split(searchPattern, vbCrLf)
+
+        For Each search In searchResults
+            For i As Integer = 0 To searchResults.Count - 1
+                Dim resultingPath As List(Of String) = _dirs.Distinct().ToList()
+                For Each result In resultingPath
+                    CollectFiles(result, searchResults(i))
+
+                Next
+            Next
+        Next
+        Return 1
+    End Function
+
+
+
+    Public Function MatterSearch()
+        Dim searchPattern As String = "*" & inputText.Text & "*"
+        Dim searchResults() As String = Split(searchPattern, vbCrLf)
+
+        For Each search In searchResults
+            For i As Integer = 0 To searchResults.Count - 1
+                Dim resultingPath As List(Of String) = _dirs.Distinct().ToList()
+
+                For Each result In resultingPath
+                    Dim splitResult = search.Split("_")
+                    Dim firstMatter = splitResult(0) + "*"
+                    Dim secondMatter = "*" + splitResult(1)
+                    Dim masterCollection As List(Of String) = CollectMatters(result, firstMatter)
+                    For Each col In masterCollection
+                        CollectMatters(col, secondMatter)
+                    Next
+                Next
+            Next
+        Next
+        Return 1
+    End Function
 
     Public Function ReadInputFile() As Integer
         Dim linecount As Integer = 0
@@ -105,8 +123,8 @@ Public Class MainWindow
                 serverlist.Add(New DataServerList() With {
                             .serverid = columns(0),
                             .serverName = columns(1),
-                            .IsChecked = True
-                            })
+                           .IsChecked = True
+                 })
             End While
             listView1.ItemsSource = serverlist
         End Using
@@ -195,18 +213,28 @@ Public Class MainWindow
     End Sub
 
 
-    Public Function CollectMatter(ByVal dir As String, ByVal pattern As String)
+
+
+    Public Function CollectMatters(ByVal directory As String, ByVal pattern As String) As List(Of String)
+        Dim queue As ConcurrentQueue(Of String) = New ConcurrentQueue(Of String)()
+        CollectMatter(directory, pattern, queue)
+        Return queue.AsEnumerable().ToList()
+    End Function
+
+
+    Public Function CollectMatter(ByVal dir As String, ByVal pattern As String, ByVal queue As ConcurrentQueue(Of String))
         Dim output = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output_matter.txt"
         Dim directory As DirectoryInfo = New DirectoryInfo(dir)
-        Dim dire = Directory.GetDirectories(pattern)
+        Dim dire = directory.GetDirectories(pattern)
         Dim sb As New StringBuilder()
-        Dim queue As ConcurrentQueue(Of String) = New ConcurrentQueue(Of String)
+
         For Each result In dire.[Select](Function(file) file.FullName)
             queue.Enqueue(result)
-            Dim underscore = result.Replace("__", "_")
-            resultsBox.Items.Add(underscore)
+            Dim underscore = result.Replace("_", "__")
 
+            resultsBox.Items.Add(underscore)
             FullPathsToPrograms.Add(result)
+
             For Each item As Object In resultsBox.Items
                 item.Replace("__", "_")
                 sb.AppendFormat("{0} {1}", item, Environment.NewLine)
@@ -221,8 +249,6 @@ Public Class MainWindow
         Return queue.AsEnumerable().ToList()
     End Function
 
-
-
     Public Function CollectFiles(ByVal directory As String, ByVal pattern As String) As List(Of String)
         Dim queue As ConcurrentQueue(Of String) = New ConcurrentQueue(Of String)()
         InternalCollectFiles(directory, pattern, queue)
@@ -232,14 +258,14 @@ Public Class MainWindow
     Private Sub InternalCollectFiles(ByVal dir As String, ByVal pattern As String, ByVal queue As ConcurrentQueue(Of String))
         Dim directory As DirectoryInfo = New DirectoryInfo(dir)
         Dim dire = directory.GetDirectories(pattern)
+
         Dim sb As New StringBuilder()
-        Dim output = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output.txt"
+        Dim output = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output.csv"
 
         For Each result In dire.[Select](Function(file) file.FullName)
             queue.Enqueue(result)
             Dim underscore = result.Replace("_", "__")
             resultsBox.Items.Add(underscore)
-
             FullPathsToPrograms.Add(result)
 
             For Each item As Object In resultsBox.Items
@@ -254,6 +280,34 @@ Public Class MainWindow
         Next
     End Sub
 
+    Private Sub chkSelectAll_Checked(ByVal sender As Object, e As RoutedEventArgs)
+
+        For Each item As DataServerList In serverlist
+            item.IsChecked = True
+        Next
+    End Sub
+
+    Private Sub chkUnselectAll_Unchecked(ByVal sender As Object, e As RoutedEventArgs)
+
+        Dim check = TryCast(sender, CheckBox)
+        If check Is Nothing Then Return
+        Dim item = check.DataContext
+
+        For Each item In serverlist
+            item.IsChecked = False
+        Next
+    End Sub
+
+    Public Sub checkbox_IsUnChecked(ByVal sender As Object, e As RoutedEventArgs)
+        Dim check = TryCast(sender, CheckBox)
+        If check Is Nothing Then Return
+        Dim item = check.DataContext
+
+        For i As Integer = 0 To listView1.SelectedItems.Count - 1
+            ' serverlist.RemoveAt(i)
+            '  Next
+        Next
+    End Sub
 
     Private Sub BT_Input_Click(sender As Object, e As RoutedEventArgs) Handles BT_Input.Click
         Dim dlg As New Microsoft.Win32.OpenFileDialog
@@ -292,54 +346,8 @@ Public Class MainWindow
 
     End Sub
 
-
-    Private Sub chkSelectAll_Checked(ByVal sender As Object, e As RoutedEventArgs)
-        'For i As Integer = 0 To listView1.Items.Count - 1
-        '    listView1.SelectedItems.Add(listView1.Items(i))
-        '    TryCast(listView1.Items(i), DataServerList).IsChecked = True
-        'Next
-        Dim checkBox = TryCast(sender, CheckBox)
-        If checkBox Is Nothing Then Return
-
-        For Each item In listView1.ItemsSource
-            item.IsChecked = True
-        Next
-
-    End Sub
-
-    Private Sub chkUnselectAll_Unchecked(ByVal sender As Object, e As RoutedEventArgs)
-
-        Dim checkBox = TryCast(sender, CheckBox)
-        If checkBox Is Nothing Then Return
-
-        For Each item In serverlist
-            item.IsChecked = checkBox.IsChecked.Value = False
-        Next
-    End Sub
-
-    Public Sub checkbox_IsChecked()
-        If listView1.Items.Count > 0 Then
-
-            For i As Integer = 0 To listView1.Items.Count - 1
-                TryCast(listView1.Items(i), DataServerList).IsChecked = True
-            Next
-            listView1.UpdateLayout()
-        End If
-    End Sub
-
-    Public Sub checkbox_IsUnchecked()
-        If listView1.Items.Count > 0 Then
-
-            For i As Integer = 0 To listView1.Items.Count - 1
-                TryCast(listView1.Items(i), DataServerList).IsChecked = False
-            Next
-            listView1.UpdateLayout()
-        End If
-
-    End Sub
-
-
     Private Sub showResults()
+
         FirstGrid.Visibility = Visibility.Hidden
         SecondGrid.Visibility = Visibility.Hidden
         ThirdGrid.Visibility = Visibility.Visible
@@ -378,24 +386,14 @@ Public Class MainWindow
     End Sub
 
     Private Sub resultsBox_MouseDoubleClick(ByVal sender As Object, ByVal e As MouseEventArgs) Handles resultsBox.MouseDoubleClick
-
         Dim fullpath As String = FullPathsToPrograms(resultsBox.SelectedIndex)
-
         Dim MyInstance As New System.Diagnostics.Process
         Dim info As ProcessStartInfo = New ProcessStartInfo((fullpath))
+
         MyInstance.StartInfo = info
         MyInstance.Start()
     End Sub
 
-    Private Sub listView1_SelectionChanged(ByVal sender As Object, ByVal e As SelectionChangedEventArgs)
-        ' selectedList = serverlist(listView1.SelectedIndex)
-
-
-        '   selectedList = serverlist(listView1.SelectedIndex)
-        ' MessageBox.Show("Selected server location = " & selectedList.serverid & vbCrLf & "Selected Server name = " & selectedList.serverName)
-
-        '  GetSubDir(sender, selectedList.serverid)
-    End Sub
 
 
 End Class
