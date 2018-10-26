@@ -13,7 +13,8 @@ Public Class MainWindow
     Inherits MetroWindow
 
     Public Shared serverlist As List(Of DataServerList) = New List(Of DataServerList)
-    Dim inputFile As String = "\\gsodata2\PSS Data\~Programs\~PSC Scripts\Server Storage Stats\input files\target servers.txt"
+    Dim inputFile As String = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\accessed_servers.txt"
+
     Dim myservers As DataServerList = New DataServerList()
     Dim selectedList As DataServerList = New DataServerList()
     Dim WithEvents BackgroundWorker1 As BackgroundWorker
@@ -34,6 +35,7 @@ Public Class MainWindow
         ReadInputFile()
         ListShares()
         TB_ServerList.Text = "\\gsodata2\PSS Data\~Programs\~PSC Scripts\Server Storage Stats\input files\target servers.txt"
+        TB_Output.Text = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output.csv"
         rb_seperate.IsChecked = True
     End Sub
 
@@ -48,12 +50,23 @@ Public Class MainWindow
             Else
                 ScanServers()
                 ClientSearch()
-                showResults()
+
+                If resultsBox.Items.Count > 0 Then
+                    showResults()
+                Else
+                    MsgBox("No results")
+                End If
             End If
+
         Else
             ScanServers()
             MatterSearch()
-            showResults()
+
+            If resultsBox.Items.Count > 0 Then
+                showResults()
+            Else
+                MsgBox("No Results")
+            End If
         End If
     End Sub
 
@@ -61,9 +74,9 @@ Public Class MainWindow
     Public Function ScanServers()
         For Each server In serverlist
             Dim servers As String = "\\" + server.serverName.ToString
-            Dim tempServer = "\\" + "lvddata2"
+            ' Dim tempServer = "\\" + "lvddata2"
             For x As Integer = 0 To _shareName.Count - 1
-                Dim path = IO.Path.Combine(tempServer, _shareName(x))
+                Dim path = IO.Path.Combine(servers, _shareName(x))
                 _dirs.Add(path)
             Next
         Next
@@ -98,7 +111,7 @@ Public Class MainWindow
                 Dim resultingPath As List(Of String) = _dirs.Distinct().ToList()
 
                 For Each result In resultingPath
-                    Dim splitResult = search.Split("_")
+                    Dim splitResult = search.Split({"_", "-"}, StringSplitOptions.None)
                     Dim firstMatter = splitResult(0) + "*"
                     Dim secondMatter = "*" + splitResult(1)
                     Dim masterCollection As List(Of String) = CollectMatters(result, firstMatter)
@@ -112,20 +125,20 @@ Public Class MainWindow
     End Function
 
     Public Function ReadInputFile() As Integer
-        Dim linecount As Integer = 0
         Using sr As New StreamReader(inputFile)
+            Dim line As String = sr.ReadLine
 
-            While Not sr.EndOfStream
-                Dim line As String = sr.ReadLine
+            Do Until sr.EndOfStream
                 Dim skipLine = sr.ReadLine
                 Dim columns As String() = skipLine.Split(",")
+
                 myservers.serverName = columns(1)
                 serverlist.Add(New DataServerList() With {
-                            .serverid = columns(0),
-                            .serverName = columns(1),
-                           .IsChecked = True
-                 })
-            End While
+                                .serverid = columns(0),
+                                .serverName = columns(1),
+                               .IsChecked = True
+                     })
+            Loop
             listView1.ItemsSource = serverlist
         End Using
         Return 1
@@ -140,76 +153,77 @@ Public Class MainWindow
         CO.EnablePrivileges = True
         CO.Username = "cmsvc"
         CO.Password = "cm2016lw!"
-        Path.Server = "LVDDATA2" ' use . for local server, else server name
-        'For Each foo In serverlist
-        '    ' Path.Server = foo.serverName
-        '    Dim newServer = foo.serverName
-        '    Path.Server = newServer
+        '   Path.Server = "BNDATA2" ' use . for local server, else server name
+        For Each server In serverlist
+            Dim newServer = server.serverName
+            Path.Server = newServer
 
-        '    Dim myServers As List(Of String) = New List(Of String)
-        '    myServers.Add(newServer)
-        '    Dim resultingPath As List(Of String) = myServers.Distinct().ToList()
+            Dim myServers As List(Of String) = New List(Of String)
+            myServers.Add(newServer)
+            Dim resultingPath As List(Of String) = myServers.Distinct().ToList()
 
-        '    For Each newpath In resultingPath
-        Path.NamespacePath = "\root\cimv2"
-        Path.RelativePath = "Win32_Share"
+            For Each newpath In resultingPath
+                Path.NamespacePath = "\root\cimv2"
+                Path.RelativePath = "Win32_Share"
+                Dim password As String = "password"
+                Dim username As String = "username"
+                Dim domain As String = "domain"
 
-        Dim password As String = "password"
-        Dim username As String = "username"
-        Dim domain As String = "domain"
-
-        Dim theNetworkCredential As NetworkCredential = New NetworkCredential(username, password, domain)
-        Dim theNetcache As CredentialCache = New CredentialCache()
-        CredentialCache.DefaultNetworkCredentials.Domain = domain
-        CredentialCache.DefaultNetworkCredentials.UserName = username
-        CredentialCache.DefaultNetworkCredentials.Password = password
+                Dim theNetworkCredential As NetworkCredential = New NetworkCredential(username, password, domain)
+                Dim theNetcache As CredentialCache = New CredentialCache()
+                CredentialCache.DefaultNetworkCredentials.Domain = domain
+                CredentialCache.DefaultNetworkCredentials.UserName = username
+                CredentialCache.DefaultNetworkCredentials.Password = password
 
 
-        Dim lNetWorkCredential As List(Of System.Net.NetworkCredential) = New System.Collections.Generic.List(Of System.Net.NetworkCredential)
-        lNetWorkCredential.Add(theNetworkCredential)
+                Dim lNetWorkCredential As List(Of System.Net.NetworkCredential) = New System.Collections.Generic.List(Of System.Net.NetworkCredential)
+                lNetWorkCredential.Add(theNetworkCredential)
 
-        Dim Scope As ManagementScope = New ManagementScope(Path, CO)
-        Scope.Connect()
+                Dim Scope As ManagementScope = New ManagementScope(Path, CO)
+                Scope.Connect()
 
-        'If (Scope.IsConnected) Then
-        '    MsgBox("Connected")
-        'Else
-        '    MsgBox("Error Connecting")
-        'End If
+                'If (Scope.IsConnected) Then
+                '    MsgBox("Connected")
+                'Else
+                '    MsgBox("Error Connecting")
+                'End If
 
 
-        Dim os As ManagementClass = New ManagementClass("Win32_OperatingSystem")
-        Dim inParams As ManagementBaseObject = os.GetMethodParameters("Win32Shutdown")
-        inParams("Flags") = "2"
-        inParams("Reserved") = "0"
+                Dim os As ManagementClass = New ManagementClass("Win32_OperatingSystem")
+                Dim inParams As ManagementBaseObject = os.GetMethodParameters("Win32Shutdown")
+                inParams("Flags") = "2"
+                inParams("Reserved") = "0"
 
-        Dim Options As ObjectGetOptions = New ObjectGetOptions(Nothing, New TimeSpan(0, 0, 0, 5), True)
-        Try
-            Shares = New ManagementClass(Scope, Path, Options)
-            Dim MOC As ManagementObjectCollection = Shares.GetInstances()
-            For Each mo As ManagementObject In MOC
-                '  Console.WriteLine("{0} - {1} - {2}", mo("Name"), mo("Description"), mo("Path"))
-                Dim shareName = mo("name")
-                Dim startingShare1 = "CMA"
-                Dim startingShare2 = "CMI"
-                Dim startingShare3 = "CMD"
-                If InStr(1, shareName, startingShare1) = 1 Or InStr(1, shareName, startingShare2) = 1 Or InStr(1, shareName, startingShare3) = 1 Then
-                    Console.WriteLine(shareName)
-                    _shareName.Add(shareName)
-                    'For Each share In _shareName
-                    '    MsgBox(share)
-                    'Next
-                End If
+                Dim Options As ObjectGetOptions = New ObjectGetOptions(Nothing, New TimeSpan(0, 0, 0, 5), True)
+                Try
+
+                    Shares = New ManagementClass(Scope, Path, Options)
+                    Dim MOC As ManagementObjectCollection = Shares.GetInstances()
+                    For Each mo As ManagementObject In MOC
+                        '  Console.WriteLine("{0} - {1} - {2}", mo("Name"), mo("Description"), mo("Path"))
+                        Dim shareName = mo("name")
+                        Dim startingShare1 = "CMA"
+                        Dim startingShare2 = "CMI"
+                        Dim startingShare3 = "CMD"
+                        If InStr(1, shareName, startingShare1) = 1 Or InStr(1, shareName, startingShare2) = 1 Or InStr(1, shareName, startingShare3) = 1 Then
+                            'Console.WriteLine(shareName)
+                            _shareName.Add(shareName)
+                            'For Each share In _shareName
+                            '    MsgBox(share)
+                            'Next
+                        End If
+                    Next
+
+                Catch ex As Exception
+                    Console.WriteLine(ex.Message)
+                Finally
+
+                    If Shares IsNot Nothing Then
+                        Shares.Dispose()
+                    End If
+                End Try
             Next
-
-        Catch ex As Exception
-            Console.WriteLine(ex.Message)
-        Finally
-
-            If Shares IsNot Nothing Then
-                Shares.Dispose()
-            End If
-        End Try
+        Next
     End Sub
 
 
@@ -225,27 +239,33 @@ Public Class MainWindow
     Public Function CollectMatter(ByVal dir As String, ByVal pattern As String, ByVal queue As ConcurrentQueue(Of String))
         Dim output = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output_matter.txt"
         Dim directory As DirectoryInfo = New DirectoryInfo(dir)
-        Dim dire = directory.GetDirectories(pattern)
-        Dim sb As New StringBuilder()
 
-        For Each result In dire.[Select](Function(file) file.FullName)
-            queue.Enqueue(result)
-            Dim underscore = result.Replace("_", "__")
+        If directory.Exists Then
+            Dim dire = directory.GetDirectories(pattern)
+            Dim sb As New StringBuilder()
 
-            resultsBox.Items.Add(underscore)
-            FullPathsToPrograms.Add(result)
+            For Each result In dire.[Select](Function(file) file.FullName)
+                queue.Enqueue(result)
+                Dim underscore = result.Replace("_", "__")
+                Dim splitMatter() = underscore.Split("\")
 
-            For Each item As Object In resultsBox.Items
-                item.Replace("__", "_")
-                sb.AppendFormat("{0} {1}", item, Environment.NewLine)
+                If splitMatter.Count > 5 Then
+                    resultsBox.Items.Add(underscore.ToString)
+                End If
+
+                FullPathsToPrograms.Add(result)
+
+                For Each item As Object In resultsBox.Items
+                    item.Replace("__", "_")
+                    sb.AppendFormat("{0} {1}", item, Environment.NewLine)
+                Next
+
+                Dim writer As New System.IO.StreamWriter(output, False)
+                writer.Write(sb.ToString())
+                writer.WriteLine()
+                writer.Close()
             Next
-
-            Dim writer As New System.IO.StreamWriter(output, False)
-            writer.Write(sb.ToString())
-            writer.WriteLine()
-            writer.Close()
-        Next
-
+        End If
         Return queue.AsEnumerable().ToList()
     End Function
 
@@ -257,27 +277,29 @@ Public Class MainWindow
 
     Private Sub InternalCollectFiles(ByVal dir As String, ByVal pattern As String, ByVal queue As ConcurrentQueue(Of String))
         Dim directory As DirectoryInfo = New DirectoryInfo(dir)
-        Dim dire = directory.GetDirectories(pattern)
 
-        Dim sb As New StringBuilder()
-        Dim output = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output.csv"
+        If directory.Exists Then
+            Dim dire = directory.GetDirectories(pattern)
+            Dim sb As New StringBuilder()
+            Dim output = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output.csv"
 
-        For Each result In dire.[Select](Function(file) file.FullName)
-            queue.Enqueue(result)
-            Dim underscore = result.Replace("_", "__")
-            resultsBox.Items.Add(underscore)
-            FullPathsToPrograms.Add(result)
+            For Each result In dire.[Select](Function(file) file.FullName)
+                queue.Enqueue(result)
+                Dim underscore = result.Replace("_", "__")
+                resultsBox.Items.Add(underscore)
+                FullPathsToPrograms.Add(result)
 
-            For Each item As Object In resultsBox.Items
-                item.Replace("__", "_")
-                sb.AppendFormat("{0} {1}", item, Environment.NewLine)
+                For Each item As Object In resultsBox.Items
+                    item.Replace("__", "_")
+                    sb.AppendFormat("{0} {1}", item, Environment.NewLine)
+                Next
+
+                Dim writer As New System.IO.StreamWriter(output, False)
+                writer.Write(sb.ToString())
+                writer.WriteLine()
+                writer.Close()
             Next
-
-            Dim writer As New System.IO.StreamWriter(output, False)
-            writer.Write(sb.ToString())
-            writer.WriteLine()
-            writer.Close()
-        Next
+        End If
     End Sub
 
     Private Sub chkSelectAll_Checked(ByVal sender As Object, e As RoutedEventArgs)
