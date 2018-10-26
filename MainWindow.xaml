@@ -13,7 +13,7 @@
     BorderThickness="1"
     Title="Client Inventory" Height="450.501" Width="646.199" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize" Foreground="Black" Background="white" >
 
- 
+
 
 
     <Grid x:Name="windowgrip" Margin="0,0,0,5">
@@ -43,8 +43,7 @@
                     <GridView>
                         <GridViewColumn>
                             <GridViewColumn.Header>
-                                <CheckBox  x:Name="selectAllCheckbox" IsChecked="{Binding RelativeSource={RelativeSource FindAncestor,
-                                         AncestorType={x:Type ListViewItem}}, Path=IsSelected}"   Visibility="Hidden"></CheckBox>
+                                <CheckBox  x:Name="selectAllCheckbox" IsChecked="{Binding Path=IsSelected}"   Visibility="Hidden"></CheckBox>
                             </GridViewColumn.Header>
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
@@ -78,15 +77,19 @@
 
 
         <Grid Grid.ColumnSpan="9" x:Name="SecondGrid" Visibility="Visible">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="75*"/>
+                <ColumnDefinition Width="244*"/>
+            </Grid.ColumnDefinitions>
 
-            <Button x:Name="BT_Go" Content="Search Inventory" HorizontalAlignment="Left" Margin="86,369,0,0" VerticalAlignment="Top" Width="143" RenderTransformOrigin="-0.301,-0.135" Height="40" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Grid.Column="4" FontSize="14" Grid.ColumnSpan="3" />
-            <Label x:Name="label_status" Content="" Grid.Column="7" HorizontalAlignment="Left" Margin="39,741,0,-347" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
-            <Label x:Name="label1" Content="Output File (.csv) :" HorizontalAlignment="Left" Margin="37,86,0,0" VerticalAlignment="Top" Grid.ColumnSpan="4" Width="116" Grid.Column="1"/>
-            <TextBox x:Name="TB_Output" Grid.Column="1" HorizontalAlignment="Left" Margin="37,117,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="521" RenderTransformOrigin="0.504,0.464" Grid.ColumnSpan="8" Height="29" MaxLines="1" />
-            <Button x:Name="BT_Output" Content="..." HorizontalAlignment="Left" Margin="576,126,0,0" VerticalAlignment="Top" Width="52" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Height="29"/>
+            <Button x:Name="BT_Go" Content="Search Inventory" HorizontalAlignment="Left" Margin="86,369,0,0" VerticalAlignment="Top" Width="143" RenderTransformOrigin="-0.301,-0.135" Height="40" BorderBrush="#FFB71C1C" Background="#FFB71C1C" FontSize="14" Grid.ColumnSpan="2" />
+            <Label x:Name="label_status" Content="" HorizontalAlignment="Left" Margin="39,741,0,-347" VerticalAlignment="Top"/>
+            <Label x:Name="label1" Content="Output File (.csv) :" HorizontalAlignment="Left" Margin="37,86,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="116"/>
+            <TextBox x:Name="TB_Output" HorizontalAlignment="Left" Margin="37,117,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="521" RenderTransformOrigin="0.504,0.464" Grid.ColumnSpan="2" Height="29" MaxLines="1" />
+            <Button x:Name="BT_Output" Content="..." HorizontalAlignment="Left" Margin="426.475,126,0,0" VerticalAlignment="Top" Width="52" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Height="29" Grid.Column="1"/>
 
 
-            <Grid Name="gvMain"  Grid.ColumnSpan="8" Margin="37,190,35,46" HorizontalAlignment="Center"  Width="562" Grid.Column="1">
+            <Grid Name="gvMain"  Grid.ColumnSpan="2" Margin="39,190,37,46" HorizontalAlignment="Center"  Width="562">
 
                 <Grid.RowDefinitions>
                     <RowDefinition Height="25"></RowDefinition>
@@ -115,10 +118,10 @@
                 </Border>
             </Grid>
 
-            <RadioButton x:Name="rb_seperate" Content="Search by Client Number" Margin="172,165,264,0" VerticalAlignment="Top"/>
-            <RadioButton x:Name="rb_group" Content="Search by Matter Number" Grid.Column="7" HorizontalAlignment="Right" Margin="0,165,72,0" VerticalAlignment="Top" Width="169" Grid.ColumnSpan="2"/>
-            <TextBox x:Name="TB_ServerList" Grid.Column="1" HorizontalAlignment="Left" Margin="37,49,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="521" RenderTransformOrigin="0.504,0.464" Grid.ColumnSpan="8" Height="29" MaxLines="1" />
-            <Button x:Name="BT_Input" Content="..." HorizontalAlignment="Left" Margin="576,58,0,0" VerticalAlignment="Top" Width="52" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Height="29"/>
+            <RadioButton x:Name="rb_seperate" Content="Search by Client Number" Margin="22.475,165,264,0" VerticalAlignment="Top" Grid.Column="1"/>
+            <RadioButton x:Name="rb_group" Content="Search by Matter Number" Grid.Column="1" HorizontalAlignment="Right" Margin="0,165,72,0" VerticalAlignment="Top" Width="169"/>
+            <TextBox x:Name="TB_ServerList" HorizontalAlignment="Left" Margin="37,49,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="521" RenderTransformOrigin="0.504,0.464" Grid.ColumnSpan="2" Height="29" MaxLines="1" />
+            <Button x:Name="BT_Input" Content="..." HorizontalAlignment="Left" Margin="426.475,58,0,0" VerticalAlignment="Top" Width="52" BorderBrush="#FFB71C1C" Background="#FFB71C1C" Height="29" Grid.Column="1"/>
         </Grid>
 
 
