@@ -1,0 +1,6 @@
+Location,Server
+Boston,BNDATA2
+Las Vegas,LVDDATA2
+Los Angeles,LADATA2
+New York,NYDATA2
+San Francisco,SFDATA2
