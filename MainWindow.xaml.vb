@@ -110,15 +110,21 @@ Public Class MainWindow
             For i As Integer = 0 To searchResults.Count - 1
                 Dim resultingPath As List(Of String) = _dirs.Distinct().ToList()
 
-                For Each result In resultingPath
-                    Dim splitResult = search.Split({"_", "-"}, StringSplitOptions.None)
-                    Dim firstMatter = splitResult(0) + "*"
-                    Dim secondMatter = "*" + splitResult(1)
-                    Dim masterCollection As List(Of String) = CollectMatters(result, firstMatter)
-                    For Each col In masterCollection
-                        CollectMatters(col, secondMatter)
+                If Not search.EndsWith("_") Then
+                    search = search + "_"
+
+                    For Each result In resultingPath
+                        Dim splitResult = search.Split({"_", "-"}, StringSplitOptions.None)
+                        Dim firstMatter = splitResult(0) + "*"
+                        Dim secondMatter = "*" + splitResult(1)
+                        Dim masterCollection As List(Of String) = CollectMatters(result, firstMatter)
+
+                        For Each col In masterCollection
+                            CollectMatters(col, secondMatter)
+                        Next
                     Next
-                Next
+                End If
+
             Next
         Next
         Return 1
@@ -237,8 +243,9 @@ Public Class MainWindow
 
 
     Public Function CollectMatter(ByVal dir As String, ByVal pattern As String, ByVal queue As ConcurrentQueue(Of String))
-        Dim output = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output_matter.txt"
+        Dim output = "\\lvdiprodata\EXPORTS01\PS100000\Erin Development Projects\Output\output.txt"
         Dim directory As DirectoryInfo = New DirectoryInfo(dir)
+        Dim emptyMatter As String = "_"
 
         If directory.Exists Then
             Dim dire = directory.GetDirectories(pattern)
